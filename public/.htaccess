@@ -1,0 +1,34 @@
+# Evita che una cartella public/app/ rimasta da versioni precedenti faccia aggiungere a Apache
+# lo slash finale (/app -> /app/) prima che la richiesta arrivi a Laravel.
+<IfModule mod_dir.c>
+    DirectorySlash Off
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Header Authorization (token Bearer per app mobile e MCP)
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Header X-XSRF-Token
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Rimuove lo slash finale
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.+)/$ /$1 [L,R=301]
+
+    # La SPA risponde su /app e /app/... : va sempre a Laravel, anche se sul server
+    # è rimasta una vecchia cartella public/app/ (versioni precedenti di AcidTalk)
+    RewriteRule ^app(/.*)?$ index.php [L]
+
+    # Front controller
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>

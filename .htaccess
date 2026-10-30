@@ -1,0 +1,21 @@
+# Usato solo se la document root del dominio punta alla cartella del progetto
+# invece che a public/ (consigliato: puntare direttamente a public/).
+# Ogni richiesta viene girata a public/: i file interni (.env, app/, vendor/, storage/ …)
+# non sono mai raggiungibili direttamente e finiscono sul 404 di Laravel.
+# La cartella interna app/ di Laravel ha lo stesso nome della rotta /app della chat:
+# impedisce ad Apache di aggiungere lo slash finale (/app -> /app/) prima del rewrite.
+<IfModule mod_dir.c>
+    DirectorySlash Off
+</IfModule>
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Protezione aggiuntiva dei file sensibili nella radice
+<FilesMatch "^(\.env.*|composer\.(json|lock)|artisan|phpunit\.xml)$">
+    Require all denied
+</FilesMatch>
